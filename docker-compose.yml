@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Serviço Ollama (IA)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: extrator-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        reservations:
+          memory: 4G
+
+  # Serviço Aplicação Web
+  app:
+    build: .
+    container_name: extrator-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+    environment:
+      - OLLAMA_HOST=http://ollama
+      - OLLAMA_PORT=11434
+      - OLLAMA_MODEL=gemma3:4b-it-q4_K_M
+      - FLASK_ENV=production
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Serviço para baixar modelo automaticamente
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: extrator-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      echo '⏳ Aguardando Ollama estar pronto...' &&
+      sleep 5 &&
+      echo '📥 Baixando modelo gemma3:4b-it-q4_K_M...' &&
+      ollama pull gemma3:4b-it-q4_K_M &&
+      echo '✅ Modelo baixado com sucesso!' &&
+      echo '🚀 Sistema pronto para uso!'
+      "
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  default:
+    name: extrator-network

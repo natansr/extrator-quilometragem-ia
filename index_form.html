@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parte Diária - GDF</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .page { background: white; width: 210mm; min-height: 297mm; padding: 15mm; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+
+        .header { text-align: center; margin-bottom: 20px; }
+        .header img { width: 60px; height: auto; }
+        .header h2 { font-size: 14px; margin: 2px 0; text-transform: uppercase; }
+        .header h3 { font-size: 12px; margin: 2px 0; font-weight: normal; }
+
+        .title { text-align: center; font-weight: bold; font-size: 18px; letter-spacing: 5px; margin: 20px 0; text-decoration: underline; }
+
+        .form-section { font-size: 12px; line-height: 1.6; }
+        .row { display: flex; margin-bottom: 8px; border-bottom: 1px solid #000; }
+        .field-label { font-weight: bold; margin-right: 5px; }
+        .input-box { flex-grow: 1; border: none; outline: none; font-size: 12px; font-family: inherit; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px; }
+        th, td { border: 1px solid black; padding: 5px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .editable-cell { width: 100%; border: none; text-align: center; outline: none; }
+
+        .footer-section { margin-top: 20px; font-size: 11px; }
+        .checkbox-group { margin: 10px 0; }
+        .date-location { text-align: right; margin-top: 30px; }
+
+        @media print {
+            body { background: none; padding: 0; }
+            .page { box-shadow: none; margin: 0; width: 100%; }
+            .no-print { display: none; }
+        }
+
+        .no-print { text-align: center; margin-bottom: 20px; }
+        button { padding: 10px 20px; cursor: pointer; background: #004a8d; color: white; border: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <button onclick="window.print()">Imprimir / Salvar PDF</button>
+</div>
+
+<div class="page">
+    <div class="header">
+        <div style="font-weight: bold; font-size: 20px;">GDF</div>
+        <h2>Governo do Distrito Federal</h2>
+        <h3>Secretaria de Estado de Educação do Distrito Federal</h3>
+        <h3>Subsecretaria de Apoio às Políticas Educacionais</h3>
+        <h3>Diretoria de Gestão de Serviços Terceirizados e Transportes</h3>
+        <h3>Gerência de Frota</h3>
+    </div>
+
+    <div class="title">PARTE DIÁRIA</div>
+
+    <div class="form-section">
+        <div class="row">
+            <span class="field-label">Nome:</span>
+            <input type="text" class="input-box" value="LUIZ FELLIPE FERREIRA GOMES VIEIRA">
+        </div>
+        <div style="display: flex; gap: 20px;">
+            <div class="row" style="flex: 1;">
+                <span class="field-label">Matrícula:</span>
+                <input type="text" class="input-box" value="209.491-6">
+            </div>
+            <div class="row" style="flex: 2;">
+                <span class="field-label">Lotação:</span>
+                <input type="text" class="input-box" value="SEDF/SUBTIC/DITIC">
+            </div>
+        </div>
+        <p>Declaro que, nesta data, recebi o veículo tipo <b>PASSAGEIRO</b> marca
+           <input type="text" style="width: 150px; border:none; border-bottom: 1px solid #000; outline:none;" value="CHEVROLET/ONIX">,
+           placa <input type="text" style="width: 100px; border:none; border-bottom: 1px solid #000; outline:none;" value="SSI-7C34"> em condições de uso e acompanhado dos componentes: triângulo, pneu de estepe, macaco, chave de roda e extintor de incêndio.</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">DATA</th>
+                <th colspan="2">SAÍDA</th>
+                <th colspan="2">CHEGADA</th>
+                <th rowspan="2">Origem/Destino</th>
+            </tr>
+            <tr>
+                <th>Hora</th>
+                <th>Odômetro</th>
+                <th>Hora</th>
+                <th>KM</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <tr>
+                <td><input type="text" class="editable-cell" value="26/01/26"></td>
+                <td><input type="text" class="editable-cell" value="10h15"></td>
+                <td><input type="text" class="editable-cell" value="29419"></td>
+                <td><input type="text" class="editable-cell" value="11h11"></td>
+                <td><input type="text" class="editable-cell" value="29462"></td>
+                <td><input type="text" class="editable-cell" style="text-align: left;" value="Shopping ID -> CED CASA GRANDE"></td>
+            </tr>
+            <tr>
+                <td><input type="text" class="editable-cell"></td><td><input type="text" class="editable-cell"></td>
+                <td><input type="text" class="editable-cell"></td><td><input type="text" class="editable-cell"></td>
+                <td><input type="text" class="editable-cell"></td><td><input type="text" class="editable-cell"></td>
+            </tr>
+            <tr>
+                <td><input type="text" class="editable-cell"></td><td><input type="text" class="editable-cell"></td>
+                <td><input type="text" class="editable-cell"></td><td><input type="text" class="editable-cell"></td>
+                <td><input type="text" class="editable-cell"></td><td><input type="text" class="editable-cell"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer-section">
+        <p><b>Obs. Obrigatória:</b><br> Registro de Combustível: 1/4 ( ) 1/2 ( ) 3/4 ( ) Cheio ( )</p>
+
+        <div style="text-align: center; font-weight: bold; margin-top: 10px;">RECIBO DE DEVOLUÇÃO DE VEÍCULO</div>
+        <p>O veículo acima mencionado foi devolvido nas condições:</p>
+        <div class="checkbox-group">
+            ( ) descritas na Parte Diária.<br>
+            ( ) outras: __________________________________________________________________________
+        </div>
+
+        <div class="date-location">
+            Brasília-DF, <input type="text" style="width: 30px; text-align: center; border:none; border-bottom: 1px solid #000;" value="26"> de
+            <input type="text" style="width: 80px; text-align: center; border:none; border-bottom: 1px solid #000;" value="Janeiro"> de
+            <input type="text" style="width: 50px; text-align: center; border:none; border-bottom: 1px solid #000;" value="2026">
+        </div>
+    </div>
+</div>
+
+<script>
+    // Função simples para adicionar mais linhas se necessário
+    document.addEventListener('keydown', function(e) {
+        if (e.key === "Enter" && e.target.classList.contains('editable-cell')) {
+            console.log("Pronto para imprimir!");
+        }
+    });
+</script>
+
+</body>
+</html>

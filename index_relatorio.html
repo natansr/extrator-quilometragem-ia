@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parte Diária - Extrator de Quilometragem</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { font-family: 'Inter', Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        
+        .page { 
+            background: white; 
+            width: 210mm; 
+            min-height: 297mm; 
+            padding: 15mm; 
+            margin: auto; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h2 { font-size: 14px; margin: 2px 0; text-transform: uppercase; color: #333; }
+        .header h3 { font-size: 12px; margin: 2px 0; font-weight: normal; color: #666; }
+
+        .title { 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 18px; 
+            letter-spacing: 3px; 
+            margin: 20px 0; 
+            text-decoration: underline;
+        }
+
+        .form-section { font-size: 12px; line-height: 1.6; margin-bottom: 15px; }
+        .row { display: flex; margin-bottom: 8px; border-bottom: 1px solid #000; }
+        .field-label { font-weight: bold; margin-right: 5px; white-space: nowrap; }
+        .input-box { 
+            flex-grow: 1; 
+            border: none; 
+            outline: none; 
+            font-size: 12px; 
+            font-family: inherit;
+            border-bottom: 1px dotted #ccc;
+        }
+        .input-box:focus { border-bottom: 1px solid #000; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px; }
+        th, td { 
+            border: 1px solid black; 
+            padding: 6px; 
+            text-align: center; 
+        }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        
+        .editable-cell { 
+            width: 100%; 
+            border: none; 
+            text-align: center; 
+            outline: none;
+            font-size: 11px;
+            font-family: inherit;
+        }
+        
+        .editable-cell.left { text-align: left; }
+        .editable-cell.date { width: 50px; }
+        .editable-cell.time { width: 45px; }
+        .editable-cell.odometer { width: 55px; }
+
+        tr:nth-child(odd) .editable-cell:hover { background-color: #fffde7; }
+        tr:last-child .editable-cell { background-color: #fafafa; }
+
+        .footer-section { margin-top: 20px; font-size: 11px; }
+        .checkbox-group { margin: 10px 0; line-height: 1.5; }
+        .date-location { text-align: right; margin-top: 30px; }
+
+        .no-print { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .no-print h4 { margin-bottom: 10px; color: #333; font-size: 14px; }
+
+        .btn { 
+            padding: 8px 16px; 
+            cursor: pointer; 
+            background: #004a8d; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            font-size: 12px;
+            margin: 5px 0;
+            display: block;
+            width: 100%;
+        }
+
+        .btn:hover { background: #003a70; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+
+        .add-row-form {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .add-row-form input {
+            width: 100%;
+            padding: 5px;
+            margin: 3px 0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        @media print {
+            body { background: none; padding: 0; margin: 0; }
+            .page { box-shadow: none; margin: 0; width: 100%; page-break-after: always; }
+            .no-print { display: none !important; }
+            .editable-cell { background: transparent !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <h4>🛠️ Controles</h4>
+    <button class="btn btn-success" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+    <button class="btn btn-secondary" onclick="downloadAsHTML()">💾 Baixar HTML</button>
+    <button class="btn btn-secondary" onclick="limparTudo()">🗑️ Limpar Tudo</button>
+    
+    <div class="add-row-form">
+        <h4 style="font-size: 12px; margin-bottom: 8px;">➕ Adicionar Novo Itinerário</h4>
+        <input type="text" id="nova-data" placeholder="Data (DD/MM/AA)" value="">
+        <input type="text" id="nova-hora-saida" placeholder="Hora Saída (HHhMM)">
+        <input type="text" id="nova-odometro" placeholder="Odômetro Saída">
+        <input type="text" id="nova-hora-chegada" placeholder="Hora Chegada (HHhMM)">
+        <input type="text" id="nova-km" placeholder="KM Chegada">
+        <input type="text" id="nova-origem" placeholder="Origem/Destino">
+        <button class="btn" onclick="adicionarLinha()" style="margin-top: 8px;">Adicionar Linha</button>
+    </div>
+</div>
+
+<div class="page">
+    <div class="header">
+        <div style="font-weight: bold; font-size: 20px;">GDF</div>
+        <h2>Governo do Distrito Federal</h2>
+        <h3>Secretaria de Estado de Educação do Distrito Federal</h3>
+        <h3>Subsecretaria de Apoio às Políticas Educacionais</h3>
+        <h3>Diretoria de Gestão de Serviços Terceirizados e Transportes</h3>
+        <h3>Gerência de Frota</h3>
+    </div>
+
+    <div class="title">PARTE DIÁRIA</div>
+
+    <div class="form-section">
+        <div class="row">
+            <span class="field-label">Nome:</span>
+            <input type="text" class="input-box" id="motorista-nome" value="DIGITE O NOME DO MOTORISTA">
+        </div>
+        <div style="display: flex; gap: 20px;">
+            <div class="row" style="flex: 1;">
+                <span class="field-label">Matrícula:</span>
+                <input type="text" class="input-box" id="motorista-matricula" value="DIGITE A MATRÍCULA">
+            </div>
+            <div class="row" style="flex: 2;">
+                <span class="field-label">Lotação:</span>
+                <input type="text" class="input-box" id="motorista-lotacao" value="DIGITE A LOTACAO">
+            </div>
+        </div>
+        <p>Declaro que, nesta data, recebi o veículo tipo <b>PASSAGEIRO</b> marca
+           <input type="text" class="input-box" id="veiculo-marca" value="DIGITE MARCA/MODELO" style="width: 200px;">,
+           placa <input type="text" class="input-box" id="veiculo-placa" value="AAA-0000" style="width: 100px;"> em condições de uso e acompanhado dos componentes: triângulo, pneu de estepe, macaco, chave de roda e extintor de incêndio.</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">DATA</th>
+                <th colspan="2">SAÍDA</th>
+                <th colspan="2">CHEGADA</th>
+                <th rowspan="2">Origem/Destino</th>
+            </tr>
+            <tr>
+                <th>Hora</th>
+                <th>Odômetro</th>
+                <th>Hora</th>
+                <th>KM</th>
+            </tr>
+        </thead>
+        <tbody id="tabela-itinerarios">
+        </tbody>
+    </table>
+
+    <div class="footer-section">
+        <p><b>Obs. Obrigatória:</b><br> Registro de Combustível: 1/4 ( ) 1/2 ( ) 3/4 ( ) Cheio ( )</p>
+
+        <div style="text-align: center; font-weight: bold; margin-top: 10px;">RECIBO DE DEVOLUÇÃO DE VEÍCULO</div>
+        <p>O veículo acima mencionado foi devolvido nas condições:</p>
+        <div class="checkbox-group">
+            ( ) descritas na Parte Diária.<br>
+            ( ) outras: __________________________________________________________________________
+        </div>
+
+        <div class="date-location">
+            Brasília-DF, <input type="text" class="input-box" id="dia" value="" style="width: 30px; text-align: center;"> de
+            <input type="text" class="input-box" id="mes" value="" style="width: 80px; text-align: center;"> de
+            <input type="text" class="input-box" id="ano" value="" style="width: 50px; text-align: center;">
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        carregarDados();
+        configurarDate();
+        setupMessageListener();
+    });
+
+    // Listener para receber dados da página principal
+    function setupMessageListener() {
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.tipo === 'adicionar_leitura') {
+                adicionarLeituraAutomatica(event.data.dados);
+            }
+        });
+    }
+
+    function configurarDate() {
+        const hoje = new Date();
+        const dias = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        document.getElementById('dia').value = hoje.getDate();
+        document.getElementById('mes').value = dias[hoje.getMonth()];
+        document.getElementById('ano').value = hoje.getFullYear();
+    }
+
+    function carregarDados() {
+        const dadosSessao = sessionStorage.getItem('leituras_quilometragem');
+        if (dadosSessao) {
+            try {
+                const leituras = JSON.parse(dadosSessao);
+                leituras.forEach(leitura => adicionarLinhaDeLeitura(leitura));
+            } catch(e) {
+                console.error('Erro ao carregar leituras:', e);
+            }
+        }
+    }
+
+    function adicionarLinhaDeLeitura(leitura) {
+        const tbody = document.getElementById('tabela-itinerarios');
+        const row = tbody.insertRow();
+        
+        let kmValor = leitura.km || leitura.kilometrage || leitura.odometro || '';
+        if (typeof kmValor === 'string') {
+            kmValor = kmValor.replace(/[^0-9]/g, '');
+        }
+        
+        const celulas = [
+            { content: leitura.data || '', className: 'date' },
+            { content: leitura.hora_saida || '', className: 'time' },
+            { content: leitura.odometro_saida || kmValor, className: 'odometer' },
+            { content: leitura.hora_chegada || '', className: 'time' },
+            { content: leitura.km_chegada || kmValor, className: 'odometer' },
+            { content: leitura.destino || leitura.origem_destino || 'Itinerário Automático', className: 'left' }
+        ];
+        
+        celulas.forEach(c => {
+            const cell = row.insertCell();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = `editable-cell ${c.className}`;
+            input.value = c.content;
+            cell.appendChild(input);
+        });
+    }
+
+    function adicionarLinha() {
+        const data = document.getElementById('nova-data').value;
+        const horaSaida = document.getElementById('nova-hora-saida').value;
+        const odometro = document.getElementById('nova-odometro').value;
+        const horaChegada = document.getElementById('nova-hora-chegada').value;
+        const km = document.getElementById('nova-km').value;
+        const origem = document.getElementById('nova-origem').value;
+        
+        const leitura = {
+            data: data,
+            hora_saida: horaSaida,
+            odometro_saida: odometro,
+            hora_chegada: horaChegada,
+            km_chegada: km,
+            destino: origem
+        };
+        
+        adicionarLinhaDeLeitura(leitura);
+        salvarLeitura(leitura);
+        
+        document.getElementById('nova-data').value = '';
+        document.getElementById('nova-hora-saida').value = '';
+        document.getElementById('nova-odometro').value = '';
+        document.getElementById('nova-hora-chegada').value = '';
+        document.getElementById('nova-km').value = '';
+        document.getElementById('nova-origem').value = '';
+    }
+
+    function limparTudo() {
+        if (confirm('Tem certeza que deseja limpar todos os dados?')) {
+            document.getElementById('tabela-itinerarios').innerHTML = '';
+            sessionStorage.removeItem('leituras_quilometragem');
+        }
+    }
+
+    function downloadAsHTML() {
+        const htmlContent = document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `parte_diaria_${new Date().toISOString().slice(0, 10)}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function salvarLeitura(leitura) {
+        let leituras = JSON.parse(sessionStorage.getItem('leituras_quilometragem') || '[]');
+        leituras.push(leitura);
+        sessionStorage.setItem('leituras_quilometragem', JSON.stringify(leituras));
+    }
+
+    function adicionarLeituraAutomatica(leitura) {
+        adicionarLinhaDeLeitura(leitura);
+        salvarLeitura(leitura);
+    }
+
+    window.adicionarLeituraAutomatica = adicionarLeituraAutomatica;
+</script>
+
+</body>
+</html>
