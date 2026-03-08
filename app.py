@@ -10,14 +10,17 @@ import base64
 import requests
 import re
 import os
+import json
 from pathlib import Path
 from typing import Optional, Dict
 import uuid
-import exifread
-from datetime import datetime
 
 app = Flask(__name__, static_folder='static')
-CORS(app)
+# Restringe CORS às origens locais conhecidas
+CORS(app, origins=['http://localhost:5000', 'http://127.0.0.1:5000'])
+
+# Limite máximo de upload: 20MB (2 imagens × 10MB)
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 
 # Configurações
 OLLAMA_HOST = os.getenv('OLLAMA_HOST', 'http://localhost')
@@ -135,49 +138,7 @@ class KilometrageExtractor:
 extractor = KilometrageExtractor()
 
 
-def extract_exif_metadata(image_path: str) -> Dict:
-    """Extrai metadata EXIF de uma imagem (data, hora)."""
-    metadata = {
-        'date': None,
-        'time': None,
-        'datetime': None
-    }
-    
-    try:
-        with open(image_path, 'rb') as img_file:
-            tags = exifread.process_file(img_file, details=False)
-            
-            # Tentar obter data/hora da foto
-            if 'EXIF DateTimeOriginal' in tags:
-                datetime_str = str(tags['EXIF DateTimeOriginal'])
-                # Formato: YYYY:MM:DD HH:MM:SS
-                parts = datetime_str.split(' ')
-                if len(parts) == 2:
-                    date_parts = parts[0].split(':')
-                    time_parts = parts[1].split(':')
-                    
-                    if len(date_parts) == 3:
-                        metadata['date'] = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][-2:]}"
-                    
-                    if len(time_parts) >= 2:
-                        metadata['time'] = f"{time_parts[0]}h{time_parts[1]}"
-                    
-                    metadata['datetime'] = datetime_str
-                    
-            # Se não encontrou EXIF, usar data do arquivo
-            if not metadata['date']:
-                file_time = datetime.fromtimestamp(os.path.getctime(image_path))
-                metadata['date'] = file_time.strftime('%d/%m/%y')
-                metadata['time'] = file_time.strftime('%Hh%M')
-                
-    except Exception as e:
-        print(f"Erro ao extrair EXIF: {e}")
-        # Usar data atual como fallback
-        now = datetime.now()
-        metadata['date'] = now.strftime('%d/%m/%y')
-        metadata['time'] = now.strftime('%Hh%M')
-    
-    return metadata
+
 
 
 @app.route('/')
@@ -189,6 +150,12 @@ def index():
 def relatorio():
     """Serve a página de relatório/impressão."""
     return send_from_directory('.', 'index_relatorio.html')
+
+
+@app.route('/brasao_gdf.png')
+def serve_brasao():
+    """Serve o brasão do GDF."""
+    return send_from_directory('.', 'brasao_gdf.png', mimetype='image/png')
 
 
 @app.route('/static/<path:filename>')
@@ -231,15 +198,12 @@ def extract_kilometrage():
                 # Extrair quilometragem
                 km_result = extractor.extract(str(file_path))
                 
-                # Extrair metadata EXIF
-                exif_data = extract_exif_metadata(str(file_path))
-                
                 if km_result['success']:
                     result['saida'] = {
                         'kilometrage': km_result['kilometrage'],
                         'raw_response': km_result['raw_response'],
-                        'date': exif_data['date'],
-                        'time': exif_data['time'],
+                        'date': None,
+                        'time': None,
                         'filename': image_saida.filename
                     }
                 else:
@@ -263,15 +227,12 @@ def extract_kilometrage():
                 # Extrair quilometragem
                 km_result = extractor.extract(str(file_path))
                 
-                # Extrair metadata EXIF
-                exif_data = extract_exif_metadata(str(file_path))
-                
                 if km_result['success']:
                     result['chegada'] = {
                         'kilometrage': km_result['kilometrage'],
                         'raw_response': km_result['raw_response'],
-                        'date': exif_data['date'],
-                        'time': exif_data['time'],
+                        'date': None,
+                        'time': None,
                         'filename': image_chegada.filename
                     }
                 else:
@@ -288,6 +249,16 @@ def extract_kilometrage():
     return jsonify(result)
 
 
+@app.route('/api/schools')
+def get_schools():
+    """Retorna lista de escolas para autocompletar."""
+    try:
+        with open('escolas_extraidas.json', 'r', encoding='utf-8') as f:
+            schools = json.load(f)
+        return jsonify(schools)
+    except Exception as e:
+        return jsonify([]), 500
+
 @app.route('/api/health')
 def health_check():
     """Verifica saúde da API e conexão com Ollama."""
@@ -296,20 +267,17 @@ def health_check():
         if response.status_code == 200:
             return jsonify({
                 'status': 'healthy',
-                'ollama': 'connected',
-                'model': OLLAMA_MODEL
+                'ollama': 'connected'
             })
         else:
             return jsonify({
                 'status': 'degraded',
-                'ollama': 'error',
-                'message': 'Erro na conexão com Ollama'
+                'ollama': 'error'
             }), 503
-    except Exception as e:
+    except Exception:
         return jsonify({
             'status': 'unhealthy',
-            'ollama': 'disconnected',
-            'error': str(e)
+            'ollama': 'disconnected'
         }), 503
 
 
@@ -320,4 +288,5 @@ if __name__ == '__main__':
     print(f"Ollama Host: {OLLAMA_HOST}:{OLLAMA_PORT}")
     print(f"Modelo: {OLLAMA_MODEL}")
     print("="*60)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)

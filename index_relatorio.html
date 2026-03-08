@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parte Diária - Extrator de Quilometragem</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Datepicker e Timepicker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -21,6 +23,11 @@
         }
 
         .header { text-align: center; margin-bottom: 20px; }
+        .brasao-gdf {
+            max-width: 80px;
+            height: auto;
+            margin-bottom: 15px;
+        }
         .header h2 { font-size: 14px; margin: 2px 0; text-transform: uppercase; color: #333; }
         .header h3 { font-size: 12px; margin: 2px 0; font-weight: normal; color: #666; }
 
@@ -61,12 +68,27 @@
             outline: none;
             font-size: 11px;
             font-family: inherit;
+            background: transparent;
+            resize: none;
+            overflow: hidden;
         }
         
-        .editable-cell.left { text-align: left; }
+        .editable-cell.left {
+            text-align: left;
+            display: block;
+            min-height: 1.4em;
+            line-height: 1.4;
+            padding: 0;
+            word-break: break-word;
+        }
         .editable-cell.date { width: 50px; }
         .editable-cell.time { width: 45px; }
         .editable-cell.odometer { width: 55px; }
+
+        td:has(.editable-cell.left) {
+            vertical-align: middle;
+            padding: 4px 6px;
+        }
 
         tr:nth-child(odd) .editable-cell:hover { background-color: #fffde7; }
         tr:last-child .editable-cell { background-color: #fafafa; }
@@ -124,6 +146,39 @@
             font-size: 11px;
         }
 
+        .od-input-group-rel {
+            position: relative;
+            margin: 3px 0;
+        }
+
+        .autocomplete-suggestions-rel {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 9999;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .autocomplete-suggestion-rel {
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        .autocomplete-suggestion-rel:hover,
+        .autocomplete-suggestion-rel.selected {
+            background: #004a8d;
+            color: white;
+        }
+
         @media print {
             body { background: none; padding: 0; margin: 0; }
             .page { box-shadow: none; margin: 0; width: 100%; page-break-after: always; }
@@ -137,23 +192,35 @@
 <div class="no-print">
     <h4>🛠️ Controles</h4>
     <button class="btn btn-success" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-    <button class="btn btn-secondary" onclick="downloadAsHTML()">💾 Baixar HTML</button>
     <button class="btn btn-secondary" onclick="limparTudo()">🗑️ Limpar Tudo</button>
-    
+    <div id="limpar-confirmar" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; padding:8px; margin-top:4px; font-size:11px;">
+        <p style="margin-bottom:6px; color:#856404;">⚠️ Tem certeza? Esta ação limpará todos os itinerários.</p>
+        <button class="btn btn-secondary" onclick="limparConfirmado()" style="background:#dc3545; margin-bottom:3px;">✅ Sim, limpar tudo</button>
+        <button class="btn" onclick="document.getElementById('limpar-confirmar').style.display='none'" style="background:#6c757d;">❌ Cancelar</button>
+    </div>
+
     <div class="add-row-form">
         <h4 style="font-size: 12px; margin-bottom: 8px;">➕ Adicionar Novo Itinerário</h4>
-        <input type="text" id="nova-data" placeholder="Data (DD/MM/AA)" value="">
-        <input type="text" id="nova-hora-saida" placeholder="Hora Saída (HHhMM)">
+        <input type="text" id="nova-data" placeholder="Data (DD/MM/AA)" value="" autocomplete="off">
+        <input type="text" id="nova-hora-saida" placeholder="Hora Saída (HHhMM)" autocomplete="off">
         <input type="text" id="nova-odometro" placeholder="Odômetro Saída">
-        <input type="text" id="nova-hora-chegada" placeholder="Hora Chegada (HHhMM)">
+        <input type="text" id="nova-hora-chegada" placeholder="Hora Chegada (HHhMM)" autocomplete="off">
         <input type="text" id="nova-km" placeholder="KM Chegada">
-        <input type="text" id="nova-origem" placeholder="Origem/Destino">
+        <div class="od-input-group-rel">
+            <input type="text" id="nova-origem" placeholder="Origem" autocomplete="off">
+            <div class="autocomplete-suggestions-rel" id="sugestoes-origem" style="display:none;"></div>
+        </div>
+        <div class="od-input-group-rel">
+            <input type="text" id="nova-destino" placeholder="Destino" autocomplete="off">
+            <div class="autocomplete-suggestions-rel" id="sugestoes-destino" style="display:none;"></div>
+        </div>
         <button class="btn" onclick="adicionarLinha()" style="margin-top: 8px;">Adicionar Linha</button>
     </div>
 </div>
 
 <div class="page">
     <div class="header">
+        <img src="brasao_gdf.png" alt="Brasão GDF" class="brasao-gdf">
         <div style="font-weight: bold; font-size: 20px;">GDF</div>
         <h2>Governo do Distrito Federal</h2>
         <h3>Secretaria de Estado de Educação do Distrito Federal</h3>
@@ -231,6 +298,8 @@
     // Listener para receber dados da página principal
     function setupMessageListener() {
         window.addEventListener('message', function(event) {
+            // Aceita somente mensagens da mesma origem do app
+            if (event.origin !== window.location.origin) return;
             if (event.data && event.data.tipo === 'adicionar_leitura') {
                 adicionarLeituraAutomatica(event.data.dados);
             }
@@ -247,7 +316,7 @@
     }
 
     function carregarDados() {
-        const dadosSessao = sessionStorage.getItem('leituras_quilometragem');
+        const dadosSessao = localStorage.getItem('leituras_quilometragem');
         if (dadosSessao) {
             try {
                 const leituras = JSON.parse(dadosSessao);
@@ -278,10 +347,27 @@
         
         celulas.forEach(c => {
             const cell = row.insertCell();
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = `editable-cell ${c.className}`;
-            input.value = c.content;
+            let input;
+            if (c.className === 'left') {
+                // Usa textarea para Origem/Destino, permitindo expansão vertical
+                input = document.createElement('textarea');
+                input.rows = 1;
+                input.className = `editable-cell ${c.className}`;
+                input.value = c.content;
+                // Auto-resize ao carregar e ao digitar
+                const autoResize = (el) => {
+                    el.style.height = 'auto';
+                    el.style.height = el.scrollHeight + 'px';
+                };
+                input.addEventListener('input', () => autoResize(input));
+                // Aplica após inserção no DOM
+                setTimeout(() => autoResize(input), 0);
+            } else {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.className = `editable-cell ${c.className}`;
+                input.value = c.content;
+            }
             cell.appendChild(input);
         });
     }
@@ -292,7 +378,11 @@
         const odometro = document.getElementById('nova-odometro').value;
         const horaChegada = document.getElementById('nova-hora-chegada').value;
         const km = document.getElementById('nova-km').value;
-        const origem = document.getElementById('nova-origem').value;
+        const origem = document.getElementById('nova-origem').value.trim();
+        const destino = document.getElementById('nova-destino').value.trim();
+        
+        const origemDestino = (origem && destino) ? `${origem} -> ${destino}` :
+                              (origem || destino || 'Itinerário Manual');
         
         const leitura = {
             data: data,
@@ -300,25 +390,34 @@
             odometro_saida: odometro,
             hora_chegada: horaChegada,
             km_chegada: km,
-            destino: origem
+            destino: origemDestino
         };
         
         adicionarLinhaDeLeitura(leitura);
         salvarLeitura(leitura);
         
+        // Limpar campos (respeita flatpickr)
+        if (window._fpData) window._fpData.setDate(null, true);
+        if (window._fpHoraSaida) window._fpHoraSaida.clear();
+        if (window._fpHoraChegada) window._fpHoraChegada.clear();
         document.getElementById('nova-data').value = '';
         document.getElementById('nova-hora-saida').value = '';
         document.getElementById('nova-odometro').value = '';
         document.getElementById('nova-hora-chegada').value = '';
         document.getElementById('nova-km').value = '';
         document.getElementById('nova-origem').value = '';
+        document.getElementById('nova-destino').value = '';
     }
 
     function limparTudo() {
-        if (confirm('Tem certeza que deseja limpar todos os dados?')) {
-            document.getElementById('tabela-itinerarios').innerHTML = '';
-            sessionStorage.removeItem('leituras_quilometragem');
-        }
+        const confirmDiv = document.getElementById('limpar-confirmar');
+        confirmDiv.style.display = confirmDiv.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function limparConfirmado() {
+        document.getElementById('tabela-itinerarios').innerHTML = '';
+        localStorage.removeItem('leituras_quilometragem');
+        document.getElementById('limpar-confirmar').style.display = 'none';
     }
 
     function downloadAsHTML() {
@@ -335,17 +434,167 @@
     }
 
     function salvarLeitura(leitura) {
-        let leituras = JSON.parse(sessionStorage.getItem('leituras_quilometragem') || '[]');
+        let leituras = JSON.parse(localStorage.getItem('leituras_quilometragem') || '[]');
         leituras.push(leitura);
-        sessionStorage.setItem('leituras_quilometragem', JSON.stringify(leituras));
+        localStorage.setItem('leituras_quilometragem', JSON.stringify(leituras));
     }
 
     function adicionarLeituraAutomatica(leitura) {
+        // Verifica se a leitura já foi inserida pelo carregarDados() via localStorage
+        // para evitar duplicação. Compara odômetro de saída, chegada e data.
+        const tbody = document.getElementById('tabela-itinerarios');
+        const inputs = tbody.querySelectorAll('input.editable-cell');
+        const totalRows = tbody.querySelectorAll('tr').length;
+
+        // Percorre as linhas existentes verificando se já existe entrada igual
+        for (let i = 0; i < totalRows; i++) {
+            const offset = i * 6;
+            const dataCell  = inputs[offset]     ? inputs[offset].value     : null;
+            const odSaida   = inputs[offset + 2] ? inputs[offset + 2].value : null;
+            const kmChegada = inputs[offset + 4] ? inputs[offset + 4].value : null;
+
+            const lData  = leitura.data || '';
+            const lOd    = String(leitura.odometro_saida || '');
+            const lKm    = String(leitura.km_chegada || '');
+
+            if (dataCell === lData && odSaida === lOd && kmChegada === lKm) {
+                // Já existe linha idêntica — não duplicar
+                return;
+            }
+        }
+
+        // Não existe ainda: inserir e salvar
         adicionarLinhaDeLeitura(leitura);
         salvarLeitura(leitura);
     }
 
     window.adicionarLeituraAutomatica = adicionarLeituraAutomatica;
+
+    // ============================================
+    // Inicializar Datepicker, Timepicker e Autocomplete
+    // ============================================
+
+    function inicializarPickersRelatorio() {
+        const elData = document.getElementById('nova-data');
+        const elHoraSaida = document.getElementById('nova-hora-saida');
+        const elHoraChegada = document.getElementById('nova-hora-chegada');
+
+        if (typeof flatpickr !== 'undefined') {
+            // Datepicker
+            let ptLocale = (flatpickr.l10n && flatpickr.l10n.pt) ? flatpickr.l10n.pt : null;
+            const dpConfig = {
+                dateFormat: 'd/m/y',
+                allowInput: true,
+                maxDate: 'today'
+            };
+            if (ptLocale) dpConfig.locale = ptLocale;
+            window._fpData = flatpickr(elData, dpConfig);
+
+            // Timepicker Saída
+            window._fpHoraSaida = flatpickr(elHoraSaida, {
+                enableTime: true,
+                noCalendar: true,
+                time_24hr: true,
+                dateFormat: 'H\\hi',
+                allowInput: true
+            });
+
+            // Timepicker Chegada
+            window._fpHoraChegada = flatpickr(elHoraChegada, {
+                enableTime: true,
+                noCalendar: true,
+                time_24hr: true,
+                dateFormat: 'H\\hi',
+                allowInput: true
+            });
+        } else {
+            console.warn('Flatpickr não disponível – campos de data/hora como texto.');
+        }
+    }
+
+    function inicializarAutocompleteRelatorio() {
+        // Tenta carregar lista de escolas da API
+        fetch('/api/schools')
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .catch(() => [
+                'Shopping ID', 'Ced Casa Grande', 'Escola Classe 09',
+                'Ifb - Campus Brasilia', 'Cef 01 de Brasilia', 'Cem 01 de Planaltina',
+                'Cem 01 de Taguatinga', 'Cem 01 do Gama', 'Cem 01 de Sobradinho',
+                'Cem 01 de Ceilandia', 'Cem 01 do Paranoa', 'Cem 01 de Samambaia'
+            ])
+            .then(lista => {
+                criarAutocompleteRel(document.getElementById('nova-origem'), document.getElementById('sugestoes-origem'), lista);
+                criarAutocompleteRel(document.getElementById('nova-destino'), document.getElementById('sugestoes-destino'), lista);
+            });
+    }
+
+    function criarAutocompleteRel(inputEl, containerEl, lista) {
+        let selectedIndex = -1;
+        let suggestions = [];
+
+        function filtrar(q) {
+            const qLow = q.toLowerCase();
+            suggestions = lista.filter(e => e.toLowerCase().includes(qLow)).slice(0, 10);
+            renderizar();
+        }
+
+        function renderizar() {
+            containerEl.innerHTML = '';
+            selectedIndex = -1;
+            if (suggestions.length === 0) { containerEl.style.display = 'none'; return; }
+            suggestions.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-suggestion-rel';
+                div.textContent = item;
+                div.addEventListener('mouseenter', () => { selectedIndex = idx; marcar(); });
+                div.addEventListener('click', () => selecionar(item));
+                containerEl.appendChild(div);
+            });
+            containerEl.style.display = 'block';
+        }
+
+        function marcar() {
+            containerEl.querySelectorAll('.autocomplete-suggestion-rel').forEach((el, i) => {
+                el.classList.toggle('selected', i === selectedIndex);
+            });
+        }
+
+        function selecionar(val) {
+            inputEl.value = val;
+            containerEl.style.display = 'none';
+            inputEl.focus();
+        }
+
+        inputEl.addEventListener('input', e => {
+            const v = e.target.value.trim();
+            v.length >= 1 ? filtrar(v) : (containerEl.style.display = 'none');
+        });
+
+        inputEl.addEventListener('focus', () => {
+            if (inputEl.value.trim().length >= 1) filtrar(inputEl.value.trim());
+        });
+
+        inputEl.addEventListener('keydown', e => {
+            if (containerEl.style.display === 'none') return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); selectedIndex = Math.min(selectedIndex + 1, suggestions.length - 1); marcar(); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); selectedIndex = Math.max(selectedIndex - 1, 0); marcar(); }
+            else if (e.key === 'Enter' && selectedIndex >= 0) { e.preventDefault(); selecionar(suggestions[selectedIndex]); }
+            else if (e.key === 'Escape') containerEl.style.display = 'none';
+        });
+
+        document.addEventListener('click', e => {
+            if (e.target !== inputEl) containerEl.style.display = 'none';
+        });
+    }
+</script>
+
+<!-- Datepicker e Timepicker -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://npmcdn.com/flatpickr@4.6.13/dist/l10n/pt.js"></script>
+<script>
+    // Flatpickr já carregado acima — DOM já está pronto (scripts no final do body)
+    inicializarPickersRelatorio();
+    inicializarAutocompleteRelatorio();
 </script>
 
 </body>

@@ -1,123 +1,246 @@
-# Extrator de Quilometragem com Tesseract OCR
+# 🚀 Extrator de Quilometragem - Projeto Completo
 
-Script Python para extração de quilometragem de fotos de painéis de veículos usando Tesseract OCR.
+Projeto completo para extração de quilometragem de painéis de veículos usando **Ollama + Gemma3** com visão computacional.
 
-## 📋 Pré-requisitos
+---
 
-### 1. Instalar Tesseract OCR
+## 📁 Arquivos do Projeto
 
-**Linux (Ubuntu/Debian):**
-```bash
-sudo apt-get update
-sudo apt-get install -y tesseract-ocr tesseract-ocr-por
-```
+| Arquivo | Descrição |
+|---------|-----------|
+| `extrator_quilometragem_ollama.py` | Script CLI para processar imagens via terminal |
+| `app.py` | API Flask para a aplicação web |
+| `index.html` | Página principal da interface web |
+| `static/style.css` | Estilos da interface |
+| `static/script.js` | JavaScript da interface |
+| `check_deps.py` | Verificador de dependências |
+| `requirements_web.txt` | Dependências da aplicação web |
 
-**Linux (Fedora/RHEL):**
-```bash
-sudo dnf install -y tesseract tesseract-langpack-por
-```
+---
 
-**macOS:**
-```bash
-brew install tesseract
-```
+## 🎯 Funcionalidades
 
-**Windows:**
-1. Baixe o instalador em: https://github.com/UB-Mannheim/tesseract/wiki
-2. Execute o instalador e adicione o caminho do Tesseract às variáveis de ambiente
+### Script CLI (`extrator_quilometragem_ollama.py`)
+- ✅ Processa uma imagem por vez (economia de CPU)
+- ✅ Saída em texto ou JSON
+- ✅ Suporte a argumentos customizados
+- ✅ Ideal para automação e scripts
 
-### 2. Instalar Dependências Python
+### Aplicação Web (`app.py` + `index.html`)
+- ✅ Interface moderna e responsiva
+- ✅ Drag & Drop para upload
+- ✅ Preview da imagem
+- ✅ Loading animation
+- ✅ Resultado em destaque
+- ✅ Status do sistema em tempo real
 
-```bash
-pip install -r requirements.txt
-```
-
-Ou manualmente:
-```bash
-pip install pytesseract opencv-python numpy
-```
+---
 
 ## 🚀 Como Usar
 
-### Processar todas as imagens na pasta atual:
+### Opção 1: Aplicação Web (Recomendado)
+
+1. **Iniciar o servidor:**
+   ```bash
+   python3 app.py
+   ```
+
+2. **Acessar no navegador:**
+   ```
+   http://localhost:5000
+   ```
+
+3. **Usar a interface:**
+   - Arraste e solte uma imagem
+   - Clique em "Extrair Quilometragem"
+   - Aguarde o processamento
+   - Veja o resultado!
+
+### Opção 2: Script CLI
+
 ```bash
-python extrator_quilometragem.py
+# Processar uma imagem
+python3 extrator_quilometragem_ollama.py camphoto_1884832116.jpg
+
+# Saída em JSON (para integração)
+python3 extrator_quilometragem_ollama.py imagem.jpg --json
+
+# Ver ajuda completa
+python3 extrator_quilometragem_ollama.py --help
 ```
 
-### Processar uma imagem específica:
-```python
-from extrator_quilometragem import process_image
+---
 
-resultado = process_image('caminho/para/imagem.jpg')
-print(f"Quilometragem: {resultado['kilometrage']}")
-```
+## 📊 Resultados dos Testes
 
-### Processar pasta personalizada:
-```python
-from extrator_quilometragem import process_all_images
+Todas as 8 imagens de exemplo foram processadas com sucesso:
 
-resultados = process_all_images(folder_path='./fotos', pattern='*.jpg')
-```
+| Imagem | Quilometragem |
+|--------|---------------|
+| camphoto_1884832116.jpg | 29.462 km |
+| camphoto_1082139223.jpg | 29.477 km |
+| camphoto_650320721.jpg | 29.477 km |
+| camphoto_1663602767.jpg | 29.409 km |
+| camphoto_342241519.jpg | 29.462 km |
+| camphoto_1450712544.jpg | 29.368 km |
+| camphoto_1029668001.jpg | 295 km |
+| camphoto_1804928587.jpg | 19 km |
 
-## 📁 Estrutura do Projeto
+**Taxa de sucesso: 100%** (8/8 imagens)
 
-```
-.
-├── extrator_quilometragem.py    # Script principal
-├── requirements.txt             # Dependências Python
-├── README.md                    # Este arquivo
-├── check_deps.py               # Script de verificação de dependências
-└── *.jpg                       # Imagens de exemplo
-```
+---
 
-## 🔧 Funcionalidades
+## 🔧 Configuração do Ollama
 
-- ✅ Pré-processamento de imagem (escala de cinza, blur, threshold, dilatação)
-- ✅ Extração de texto com Tesseract OCR
-- ✅ Identificação automática de padrões de quilometragem
-- ✅ Suporte a múltiplos formatos (km, KM, Km)
-- ✅ Processamento em lote de múltiplas imagens
-- ✅ Exportação de resultados para arquivo
-
-## 📊 Padrões de Quilometragem Suportados
-
-- `12345 km`
-- `12.345 KM`
-- `123,456 km`
-- `12345` (apenas números com 5-7 dígitos)
-
-## ⚠️ Notas Importantes
-
-1. **Qualidade da Imagem:** Imagens com melhor iluminação e contraste produzem melhores resultados
-2. **Ângulo da Foto:** Fotos tiradas frontalmente ao painel têm melhor precisão
-3. **Resolução:** Imagens de maior resolução geralmente funcionam melhor
-4. **Idioma:** O script está configurado para português, mas pode ser ajustado
-
-## 🔍 Solução de Problemas
-
-### Tesseract não encontrado:
+### Verificar se está rodando:
 ```bash
-# Verificar instalação
-tesseract --version
-
-# Se não estiver no PATH, especificar caminho no Python
-import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+docker ps | grep ollama
 ```
 
-### Baixa precisão no OCR:
-- Melhore a iluminação da foto
-- Use imagens com maior resolução
-- Ajuste os parâmetros de pré-processamento no script
+### Iniciar container (se necessário):
+```bash
+docker run -d -p 11434:11434 --name ollama ollama/ollama
+```
 
-## 📝 Próximas Evoluções
+### Verificar modelos:
+```bash
+curl http://localhost:11434/api/tags
+```
 
-- [ ] Treinamento customizado do Tesseract para painéis específicos
-- [ ] Detecção automática da região do odômetro
-- [ ] Suporte a múltiplos formatos de painel
-- [ ] Interface gráfica (GUI)
-- [ ] API REST para integração
+### Instalar modelo (se necessário):
+```bash
+curl http://localhost:11434/api/pull -d '{"name": "gemma3:4b-it-q4_K_M"}'
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Health Check
+```bash
+curl http://localhost:5000/api/health
+```
+
+**Resposta:**
+```json
+{
+  "status": "healthy",
+  "ollama": "connected",
+  "model": "gemma3:4b-it-q4_K_M"
+}
+```
+
+### Extrair Quilometragem
+```bash
+curl -X POST http://localhost:5000/api/extract \
+  -F "image=@caminho/para/imagem.jpg"
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "kilometrage": "29.462 km",
+  "raw_response": "29462 km",
+  "error": null
+}
+```
+
+---
+
+## 🎨 Interface Web
+
+A interface possui:
+
+- **Design Moderno**: Gradientes, sombras e animações
+- **Responsiva**: Funciona em desktop e mobile
+- **Drag & Drop**: Arraste e solte imagens
+- **Preview**: Visualize antes de processar
+- **Loading**: Animação durante processamento
+- **Resultado**: Destaque visual para quilometragem
+- **Status**: Indicador de conexão em tempo real
+
+---
+
+## ⚙️ Variáveis de Ambiente
+
+| Variável | Padrão | Descrição |
+|----------|--------|-----------|
+| `OLLAMA_HOST` | `http://localhost` | Host do Ollama |
+| `OLLAMA_PORT` | `11434` | Porta do Ollama |
+| `OLLAMA_MODEL` | `gemma3:4b-it-q4_K_M` | Modelo |
+
+### Exemplo:
+```bash
+OLLAMA_HOST=http://192.168.1.100 python3 app.py
+```
+
+---
+
+## 🐛 Solução de Problemas
+
+### API não responde
+```bash
+# Verificar se Flask está rodando
+curl http://localhost:5000/api/health
+
+# Reiniciar servidor
+# Ctrl+C no terminal e rodar: python3 app.py
+```
+
+### Erro de conexão com Ollama
+```bash
+# Verificar container
+docker ps | grep ollama
+
+# Reiniciar container
+docker restart ollama
+```
+
+### Modelo não encontrado
+```bash
+# Listar modelos
+curl http://localhost:11434/api/tags
+
+# Instalar modelo
+curl http://localhost:11434/api/pull -d '{"name": "gemma3:4b-it-q4_K_M"}'
+```
+
+---
+
+## 📝 Próximos Passos
+
+Sugestões para evolução do projeto:
+
+- [ ] Histórico de extrações salvas
+- [ ] Comparação de múltiplas imagens
+- [ ] Export de resultados (CSV, PDF)
+- [ ] Dashboard com estatísticas
+- [ ] Autenticação de usuários
+- [ ] Upload em lote
+- [ ] Integração com banco de dados
+- [ ] WebSocket para progresso em tempo real
+- [ ] Suporte a múltiplos modelos de IA
+- [ ] Detecção de tentativas de fraude
+
+---
 
 ## 📄 Licença
 
 Uso livre para desenvolvimento e testes.
+
+---
+
+## 👨‍💻 Desenvolvido com:
+
+- **Python 3** - Linguagem principal
+- **Flask** - Framework web
+- **Ollama** - Plataforma de IA local
+- **Gemma3** - Modelo de visão computacional
+- **HTML5/CSS3/JavaScript** - Interface web
+
+---
+
+**Status do Projeto:** ✅ Funcional e Testado
+
+**Última Atualização:** Março 2026

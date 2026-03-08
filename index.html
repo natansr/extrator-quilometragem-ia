@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extrator de Quilometragem | Ollama + Gemma3</title>
-    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Datepicker e Timepicker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <!-- Autocomplete -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/autocomplete-js@2.1.0/dist/autocomplete.min.css">
 </head>
 <body>
     <div class="container">
@@ -105,16 +110,7 @@
                                 <span class="km-label-small">Odômetro</span>
                                 <span id="km-saida" class="km-value-small">--</span>
                             </div>
-                            <div class="metadata-small">
-                                <div class="meta-item">
-                                    <span class="meta-label">Data:</span>
-                                    <span id="data-saida" class="meta-value">--</span>
-                                </div>
-                                <div class="meta-item">
-                                    <span class="meta-label">Hora:</span>
-                                    <span id="hora-saida" class="meta-value">--</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                     
@@ -132,16 +128,7 @@
                                 <span class="km-label-small">Odômetro</span>
                                 <span id="km-chegada" class="km-value-small">--</span>
                             </div>
-                            <div class="metadata-small">
-                                <div class="meta-item">
-                                    <span class="meta-label">Data:</span>
-                                    <span id="data-chegada" class="meta-value">--</span>
-                                </div>
-                                <div class="meta-item">
-                                    <span class="meta-label">Hora:</span>
-                                    <span id="hora-chegada" class="meta-value">--</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -200,18 +187,33 @@
                 </div>
                 <button id="retry-btn" class="btn-secondary">Tentar Novamente</button>
             </div>
-        </main>
 
-                    <!-- Origem/Destino Inputs -->
+            <!-- Datetime e Origem/Destino Inputs -->
             <div id="origem-destino-section" class="origem-destino-section hidden">
+                <div class="datetime-inputs" style="margin-bottom: 15px;">
+                    <div class="datetime-input-group">
+                        <label for="input-data-saida">📅 Data Saída:</label>
+                        <input type="text" id="input-data-saida" class="datetime-input" placeholder="DD/MM/AA">
+                    </div>
+                    <div class="datetime-input-group">
+                        <label for="input-hora-saida">⏰ Hora Saída:</label>
+                        <input type="text" id="input-hora-saida" class="datetime-input" placeholder="HHhMM">
+                    </div>
+                    <div class="datetime-input-group">
+                        <label for="input-hora-chegada">⏰ Hora Chegada:</label>
+                        <input type="text" id="input-hora-chegada" class="datetime-input" placeholder="HHhMM">
+                    </div>
+                </div>
                 <div class="od-inputs">
                     <div class="od-input-group">
                         <label for="input-origem">📍 Origem:</label>
-                        <input type="text" id="input-origem" class="od-input" placeholder="Local de origem">
+                        <input type="text" id="input-origem" class="od-input" placeholder="Local de origem" autocomplete="off">
+                        <div class="autocomplete-suggestions" style="display: none;"></div>
                     </div>
                     <div class="od-input-group">
                         <label for="input-destino">🏁 Destino:</label>
-                        <input type="text" id="input-destino" class="od-input" placeholder="Local de destino">
+                        <input type="text" id="input-destino" class="od-input" placeholder="Local de destino" autocomplete="off">
+                        <div class="autocomplete-suggestions" style="display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -236,6 +238,8 @@
                     Adicionar ao Relatório
                 </button>
             </div>
+        </main>
+
 
         <!-- Footer -->
         <footer class="footer">
@@ -243,6 +247,15 @@
         </footer>
     </div>
 
-    <script src="static/script_v2.js"></script>
+    <!-- Fontes e Bibliotecas -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Datepicker e Timepicker -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="https://npmcdn.com/flatpickr@4.6.13/dist/l10n/pt.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/index.js"></script>
+    <!-- Autocomplete -->
+    <script src="https://cdn.jsdelivr.net/npm/autocomplete-js@2.1.0/dist/autocomplete.min.js"></script>
+    
+    <script src="static/script.js?v=4"></script>
 </body>
 </html>
