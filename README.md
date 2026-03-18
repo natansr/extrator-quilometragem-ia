@@ -6,17 +6,7 @@ Hoje o repositorio ainda carrega varios elementos do ambiente de origem do GDF, 
 
 ## Status do Projeto
 
-### Fluxo da UEG: em construcao
-
-O projeto esta em fase de adaptacao para a realidade da UEG.
-
-Neste momento:
-
-- a base tecnica de extracao ja existe
-- o fluxo visual e o relatorio ainda refletem o modelo original recebido do GDF
-- a versao final da UEG depende do PDF/formulario oficial que sera analisado depois
-
-Assim, este repositorio deve ser entendido hoje como uma base funcional em adaptacao, e nao como a versao final do processo da UEG.
+### Fluxo da UEG: Under construction
 
 ## Visao Geral
 
@@ -224,7 +214,7 @@ O codigo ainda reflete o contexto de origem. Antes de colocar em uso real na UEG
 
 ## Proxima Etapa Para Adaptacao
 
-Status: em construcao
+Status: Under construction
 
 Quando voce trouxer o modelo de PDF ou formulario da UEG, a adaptacao deve seguir esta ordem:
 
