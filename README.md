@@ -6,7 +6,7 @@ Hoje o repositorio ainda carrega varios elementos do ambiente de origem do GDF, 
 
 ## Status do Projeto
 
-### Universidade Estadual de Goias, under construction.
+### UEG-UNDER CONSTRUCTION
 
 ## Visao Geral
 
@@ -214,7 +214,7 @@ O codigo ainda reflete o contexto de origem. Antes de colocar em uso real na UEG
 
 ## Proxima Etapa Para Adaptacao
 
-Universidade Estadual de Goias, under construction.
+UEG-UNDER CONSTRUCTION
 
 Quando voce trouxer o modelo de PDF ou formulario da UEG, a adaptacao deve seguir esta ordem:
 
