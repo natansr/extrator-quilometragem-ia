@@ -1,12 +1,8 @@
 # Extrator de Quilometragem para Viaturas
 
-Aplicacao em Python/Flask para extrair a leitura do odometro de fotos do painel de veiculos usando Ollama com modelo de visao. O projeto tambem oferece uma interface web para registrar saida e chegada, montar um relatorio e imprimir uma "parte diaria".
-
-Hoje o repositorio ainda carrega varios elementos do ambiente de origem do GDF, mas a base ja serve como ponto de partida para adaptar o fluxo de viaturas da UEG.
-
 ## Status do Projeto
 
-### UEG-UNDER CONSTRUCTION
+### UEG-VERSION UNDER CONSTRUCTION-
 
 ## Visao Geral
 
@@ -214,7 +210,7 @@ O codigo ainda reflete o contexto de origem. Antes de colocar em uso real na UEG
 
 ## Proxima Etapa Para Adaptacao
 
-UEG-UNDER CONSTRUCTION
+UEG-VERSION UNDER CONSTRUCTION-
 
 Quando voce trouxer o modelo de PDF ou formulario da UEG, a adaptacao deve seguir esta ordem:
 
