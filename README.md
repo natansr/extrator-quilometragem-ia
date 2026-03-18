@@ -1,246 +1,256 @@
-# 🚀 Extrator de Quilometragem - Projeto Completo
+# Extrator de Quilometragem para Viaturas
 
-Projeto completo para extração de quilometragem de painéis de veículos usando **Ollama + Gemma3** com visão computacional.
+Aplicacao em Python/Flask para extrair a leitura do odometro de fotos do painel de veiculos usando Ollama com modelo de visao. O projeto tambem oferece uma interface web para registrar saida e chegada, montar um relatorio e imprimir uma "parte diaria".
 
----
+Hoje o repositorio ainda carrega varios elementos do ambiente de origem do GDF, mas a base ja serve como ponto de partida para adaptar o fluxo de viaturas da UEG.
 
-## 📁 Arquivos do Projeto
+## Status do Projeto
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `extrator_quilometragem_ollama.py` | Script CLI para processar imagens via terminal |
-| `app.py` | API Flask para a aplicação web |
-| `index.html` | Página principal da interface web |
+### Fluxo da UEG: em construcao
+
+O projeto esta em fase de adaptacao para a realidade da UEG.
+
+Neste momento:
+
+- a base tecnica de extracao ja existe
+- o fluxo visual e o relatorio ainda refletem o modelo original recebido do GDF
+- a versao final da UEG depende do PDF/formulario oficial que sera analisado depois
+
+Assim, este repositorio deve ser entendido hoje como uma base funcional em adaptacao, e nao como a versao final do processo da UEG.
+
+## Visao Geral
+
+O sistema faz duas coisas principais:
+
+1. Recebe uma ou duas imagens do painel do veiculo.
+2. Envia as imagens ao Ollama para obter a quilometragem e exibe os resultados na interface.
+
+Na interface web, o usuario pode:
+
+- enviar imagem de saida
+- enviar imagem de chegada
+- informar data, hora, origem e destino
+- adicionar a leitura a um relatorio local no navegador
+- abrir uma pagina pronta para impressao/PDF
+
+## Estrutura do Projeto
+
+| Arquivo | Funcao atual |
+| --- | --- |
+| `app.py` | API Flask e servidor da interface web |
+| `extrator_quilometragem_ollama.py` | Script Python para testes/processamento via terminal |
+| `index.html` | Tela principal para upload das imagens |
+| `index_relatorio.html` | Pagina de relatorio/parte diaria para impressao |
+| `static/script.js` | Logica do frontend |
 | `static/style.css` | Estilos da interface |
-| `static/script.js` | JavaScript da interface |
-| `check_deps.py` | Verificador de dependências |
-| `requirements_web.txt` | Dependências da aplicação web |
+| `escolas_extraidas.json` | Lista usada no autocomplete de origem/destino |
+| `docker-compose.yml` | Sobe a aplicacao, o Ollama e um init para baixar o modelo |
+| `Dockerfile` | Empacotamento da aplicacao web |
+| `requirements.txt` | Dependencias Python da aplicacao |
+| `check_deps.py` | Script legado de verificacao de dependencias OCR antigas |
 
----
+## Como o Fluxo Funciona Hoje
 
-## 🎯 Funcionalidades
+### Interface web
 
-### Script CLI (`extrator_quilometragem_ollama.py`)
-- ✅ Processa uma imagem por vez (economia de CPU)
-- ✅ Saída em texto ou JSON
-- ✅ Suporte a argumentos customizados
-- ✅ Ideal para automação e scripts
+1. O usuario abre a pagina principal em `http://localhost:5000`.
+2. Envia uma imagem de saida, uma de chegada ou ambas.
+3. O frontend faz `POST /api/extract`.
+4. O backend salva temporariamente as imagens em `uploads/`.
+5. O backend envia cada imagem ao Ollama usando o endpoint `/api/generate`.
+6. A resposta do modelo e tratada por regex para padronizar a quilometragem.
+7. O resultado volta para a tela.
+8. O usuario pode adicionar os dados ao relatorio, salvo em `localStorage`.
 
-### Aplicação Web (`app.py` + `index.html`)
-- ✅ Interface moderna e responsiva
-- ✅ Drag & Drop para upload
-- ✅ Preview da imagem
-- ✅ Loading animation
-- ✅ Resultado em destaque
-- ✅ Status do sistema em tempo real
+### Script de terminal
 
----
+O arquivo `extrator_quilometragem_ollama.py` permite testar a extracao em lote nas imagens `camphoto_*.jpg` da raiz do projeto.
 
-## 🚀 Como Usar
+## Requisitos
 
-### Opção 1: Aplicação Web (Recomendado)
+- Python 3.10+ recomendado
+- Ollama em execucao
+- Modelo com capacidade de visao disponivel no Ollama
+- Dependencias Python instaladas
 
-1. **Iniciar o servidor:**
-   ```bash
-   python3 app.py
-   ```
-
-2. **Acessar no navegador:**
-   ```
-   http://localhost:5000
-   ```
-
-3. **Usar a interface:**
-   - Arraste e solte uma imagem
-   - Clique em "Extrair Quilometragem"
-   - Aguarde o processamento
-   - Veja o resultado!
-
-### Opção 2: Script CLI
+Dependencias do projeto:
 
 ```bash
-# Processar uma imagem
-python3 extrator_quilometragem_ollama.py camphoto_1884832116.jpg
-
-# Saída em JSON (para integração)
-python3 extrator_quilometragem_ollama.py imagem.jpg --json
-
-# Ver ajuda completa
-python3 extrator_quilometragem_ollama.py --help
+pip install -r requirements.txt
 ```
 
----
+## Configuracao
 
-## 📊 Resultados dos Testes
+Variaveis de ambiente aceitas pela aplicacao:
 
-Todas as 8 imagens de exemplo foram processadas com sucesso:
+| Variavel | Padrao | Uso |
+| --- | --- | --- |
+| `OLLAMA_HOST` | `http://localhost` | Host do servico Ollama |
+| `OLLAMA_PORT` | `11434` | Porta do Ollama |
+| `OLLAMA_MODEL` | `gemma3:4b-it-q4_K_M` | Modelo de visao usado na extracao |
+| `FLASK_DEBUG` | `false` | Ativa modo debug do Flask |
 
-| Imagem | Quilometragem |
-|--------|---------------|
-| camphoto_1884832116.jpg | 29.462 km |
-| camphoto_1082139223.jpg | 29.477 km |
-| camphoto_650320721.jpg | 29.477 km |
-| camphoto_1663602767.jpg | 29.409 km |
-| camphoto_342241519.jpg | 29.462 km |
-| camphoto_1450712544.jpg | 29.368 km |
-| camphoto_1029668001.jpg | 295 km |
-| camphoto_1804928587.jpg | 19 km |
+Exemplo:
 
-**Taxa de sucesso: 100%** (8/8 imagens)
-
----
-
-## 🔧 Configuração do Ollama
-
-### Verificar se está rodando:
 ```bash
-docker ps | grep ollama
+export OLLAMA_HOST=http://localhost
+export OLLAMA_PORT=11434
+export OLLAMA_MODEL=gemma3:4b-it-q4_K_M
+python3 app.py
 ```
 
-### Iniciar container (se necessário):
+## Como Rodar Localmente
+
+### Opcao 1: app web
+
 ```bash
-docker run -d -p 11434:11434 --name ollama ollama/ollama
+python3 app.py
 ```
 
-### Verificar modelos:
+Depois abra:
+
+```text
+http://localhost:5000
+```
+
+### Opcao 2: script de terminal
+
 ```bash
-curl http://localhost:11434/api/tags
+python3 extrator_quilometragem_ollama.py
 ```
 
-### Instalar modelo (se necessário):
+Observacao: esse script hoje esta voltado para as imagens de exemplo `camphoto_*.jpg` presentes na raiz do repositorio.
+
+## Como Rodar com Docker
+
+Para subir a aplicacao e o Ollama:
+
 ```bash
-curl http://localhost:11434/api/pull -d '{"name": "gemma3:4b-it-q4_K_M"}'
+docker compose up --build
 ```
 
----
+O `docker-compose.yml` atual:
 
-## 🔌 API Endpoints
+- sobe o servico `ollama`
+- sobe a aplicacao Flask na porta `5000`
+- executa um container auxiliar para baixar o modelo `gemma3:4b-it-q4_K_M`
 
-### Health Check
+## Endpoints da API
+
+### `GET /api/health`
+
+Verifica se a aplicacao esta no ar e se consegue falar com o Ollama.
+
+Exemplo:
+
 ```bash
 curl http://localhost:5000/api/health
 ```
 
-**Resposta:**
+Resposta esperada quando tudo esta ok:
+
 ```json
 {
   "status": "healthy",
-  "ollama": "connected",
-  "model": "gemma3:4b-it-q4_K_M"
+  "ollama": "connected"
 }
 ```
 
-### Extrair Quilometragem
+### `POST /api/extract`
+
+Recebe:
+
+- `image_saida`
+- `image_chegada`
+
+Ambos sao opcionais, mas pelo menos um deve ser enviado.
+
+Exemplo:
+
 ```bash
 curl -X POST http://localhost:5000/api/extract \
-  -F "image=@caminho/para/imagem.jpg"
+  -F "image_saida=@/caminho/saida.jpg" \
+  -F "image_chegada=@/caminho/chegada.jpg"
 ```
 
-**Resposta:**
+Exemplo de resposta:
+
 ```json
 {
   "success": true,
-  "kilometrage": "29.462 km",
-  "raw_response": "29462 km",
-  "error": null
+  "saida": {
+    "kilometrage": "29.462 km",
+    "raw_response": "29462 km",
+    "date": null,
+    "time": null,
+    "filename": "saida.jpg"
+  },
+  "chegada": {
+    "kilometrage": "29.477 km",
+    "raw_response": "29477 km",
+    "date": null,
+    "time": null,
+    "filename": "chegada.jpg"
+  },
+  "errors": []
 }
 ```
 
----
+### `GET /api/schools`
 
-## 🎨 Interface Web
+Retorna a lista do arquivo `escolas_extraidas.json` para autocomplete no frontend.
 
-A interface possui:
+## O Que Ja Esta Pronto
 
-- **Design Moderno**: Gradientes, sombras e animações
-- **Responsiva**: Funciona em desktop e mobile
-- **Drag & Drop**: Arraste e solte imagens
-- **Preview**: Visualize antes de processar
-- **Loading**: Animação durante processamento
-- **Resultado**: Destaque visual para quilometragem
-- **Status**: Indicador de conexão em tempo real
+- extracao de quilometragem via IA local com Ollama
+- upload de uma ou duas imagens
+- processamento separado de saida e chegada
+- padronizacao da quilometragem retornada pelo modelo
+- tela web para uso operacional
+- preenchimento complementar de data, hora, origem e destino
+- geracao de relatorio em pagina separada para impressao
+- persistencia local do relatorio no navegador
 
----
+## Pontos de Atencao Para Adaptacao na UEG
 
-## ⚙️ Variáveis de Ambiente
+O codigo ainda reflete o contexto de origem. Antes de colocar em uso real na UEG, vale revisar:
 
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
-| `OLLAMA_HOST` | `http://localhost` | Host do Ollama |
-| `OLLAMA_PORT` | `11434` | Porta do Ollama |
-| `OLLAMA_MODEL` | `gemma3:4b-it-q4_K_M` | Modelo |
+- identidade visual e textos ainda ligados ao GDF
+- arquivo `brasao_gdf.png` e cabecalho do relatorio
+- nomenclaturas de escolas e destinos no autocomplete
+- layout da "parte diaria", que hoje segue o modelo do GDF
+- campos obrigatorios que a UEG usa no controle de viaturas
+- formato exato do PDF ou formulario oficial da UEG
 
-### Exemplo:
-```bash
-OLLAMA_HOST=http://192.168.1.100 python3 app.py
-```
+## Proxima Etapa Para Adaptacao
 
----
+Status: em construcao
 
-## 🐛 Solução de Problemas
+Quando voce trouxer o modelo de PDF ou formulario da UEG, a adaptacao deve seguir esta ordem:
 
-### API não responde
-```bash
-# Verificar se Flask está rodando
-curl http://localhost:5000/api/health
+1. mapear os campos obrigatorios do documento real
+2. decidir quais campos saem automaticamente da IA e quais serao digitados
+3. ajustar `index_relatorio.html` para o layout institucional da UEG
+4. trocar brasao, textos e rotulos
+5. validar com algumas fotos reais de painel das viaturas
+6. revisar se a formatacao de data, hora e kilometragem bate com o padrao interno
 
-# Reiniciar servidor
-# Ctrl+C no terminal e rodar: python3 app.py
-```
+## Limitacoes Atuais
 
-### Erro de conexão com Ollama
-```bash
-# Verificar container
-docker ps | grep ollama
+- a extracao depende da qualidade da foto do painel
+- o parser de quilometragem usa regex simples; leituras ruins podem falhar
+- nao ha banco de dados
+- nao ha autenticacao
+- o relatorio e salvo apenas no navegador do usuario
+- o script `check_deps.py` parece ser de uma abordagem antiga com OCR/Tesseract e nao representa o fluxo principal atual
 
-# Reiniciar container
-docker restart ollama
-```
+## Orientacao Pratica Para Voce Agora
 
-### Modelo não encontrado
-```bash
-# Listar modelos
-curl http://localhost:11434/api/tags
+Enquanto voce ainda vai levantar o modelo de PDF da UEG, o melhor caminho e:
 
-# Instalar modelo
-curl http://localhost:11434/api/pull -d '{"name": "gemma3:4b-it-q4_K_M"}'
-```
+1. rodar o sistema com fotos de teste
+2. verificar se ele consegue ler bem os odometros das viaturas que voces usam
+3. separar 2 ou 3 exemplos reais de formularios ou PDFs da UEG
+4. marcar quais campos precisam aparecer no relatorio final
 
----
-
-## 📝 Próximos Passos
-
-Sugestões para evolução do projeto:
-
-- [ ] Histórico de extrações salvas
-- [ ] Comparação de múltiplas imagens
-- [ ] Export de resultados (CSV, PDF)
-- [ ] Dashboard com estatísticas
-- [ ] Autenticação de usuários
-- [ ] Upload em lote
-- [ ] Integração com banco de dados
-- [ ] WebSocket para progresso em tempo real
-- [ ] Suporte a múltiplos modelos de IA
-- [ ] Detecção de tentativas de fraude
-
----
-
-## 📄 Licença
-
-Uso livre para desenvolvimento e testes.
-
----
-
-## 👨‍💻 Desenvolvido com:
-
-- **Python 3** - Linguagem principal
-- **Flask** - Framework web
-- **Ollama** - Plataforma de IA local
-- **Gemma3** - Modelo de visão computacional
-- **HTML5/CSS3/JavaScript** - Interface web
-
----
-
-**Status do Projeto:** ✅ Funcional e Testado
-
-**Última Atualização:** Março 2026
+Com isso, a gente consegue fazer a migracao do modelo do GDF para a UEG com bem menos retrabalho.
